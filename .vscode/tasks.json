@@ -2,12 +2,13 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "MCP: Compile Delphi Project",
+            "label": "MCP: Compile (Debug)",
             "type": "shell",
             "command": "python",
             "args": [
-                "-c",
-                "import asyncio; from delphi_mcp_server.server import DelphiMCPServer; server = DelphiMCPServer(); asyncio.run(server._compile_project())"
+                "${workspaceFolder}/mcp_build_client.py",
+                "compile",
+                "--config", "Debug"
             ],
             "group": {
                 "kind": "build",
@@ -20,12 +21,12 @@
             }
         },
         {
-            "label": "MCP: Build Release",
+            "label": "MCP: Build (Release)",
             "type": "shell",
             "command": "python",
             "args": [
-                "-c",
-                "import asyncio; from delphi_mcp_server.server import DelphiMCPServer; server = DelphiMCPServer(); asyncio.run(server._compile_project(platform='Win32', config='Release'))"
+                "${workspaceFolder}/mcp_build_client.py",
+                "build"
             ],
             "group": "build",
             "problemMatcher": "$msCompile",
@@ -35,12 +36,14 @@
             }
         },
         {
-            "label": "MCP: Build Debug",
+            "label": "MCP: Compile Win64 (Debug)",
             "type": "shell",
             "command": "python",
             "args": [
-                "-c",
-                "import asyncio; from delphi_mcp_server.server import DelphiMCPServer; server = DelphiMCPServer(); asyncio.run(server._compile_project(platform='Win32', config='Debug'))"
+                "${workspaceFolder}/mcp_build_client.py",
+                "compile",
+                "--platform", "Win64",
+                "--config", "Debug"
             ],
             "group": "build",
             "problemMatcher": "$msCompile",
@@ -50,12 +53,13 @@
             }
         },
         {
-            "label": "MCP: Build Win64 Release",
+            "label": "MCP: Build Win64 (Release)",
             "type": "shell",
             "command": "python",
             "args": [
-                "-c",
-                "import asyncio; from delphi_mcp_server.server import DelphiMCPServer; server = DelphiMCPServer(); asyncio.run(server._compile_project(platform='Win64', config='Release'))"
+                "${workspaceFolder}/mcp_build_client.py",
+                "build",
+                "--platform", "Win64"
             ],
             "group": "build",
             "problemMatcher": "$msCompile",

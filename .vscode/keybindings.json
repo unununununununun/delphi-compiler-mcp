@@ -2,26 +2,31 @@
     {
         "key": "ctrl+shift+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Compile Delphi Project"
+        "args": "MCP: Compile (Debug)"
     },
     {
         "key": "ctrl+shift+alt+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Build Release"
+        "args": "MCP: Build (Release)"
     },
     {
         "key": "f9",
         "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Compile Delphi Project"
+        "args": "MCP: Compile (Debug)"
     },
     {
         "key": "ctrl+f9",
         "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Build Release"
+        "args": "MCP: Build (Release)"
     },
     {
         "key": "shift+f9",
         "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Build Debug"
+        "args": "MCP: Compile Win64 (Debug)"
+    },
+    {
+        "key": "ctrl+shift+f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP: Build Win64 (Release)"
     }
 ]
