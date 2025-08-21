@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "delphi-compiler-mcp"
+version = "1.0.0"
+description = "MCP Server for Delphi/Object Pascal compilation"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "github.com//unununununununun"}
+]
+keywords = ["mcp", "delphi", "pascal", "compiler", "cursor", "ide"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Compilers",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "mcp>=1.0.0",
+    "fastmcp>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/delphi-compiler-mcp"
+Repository = "https://github.com/yourusername/delphi-compiler-mcp"
+Issues = "https://github.com/yourusername/delphi-compiler-mcp/issues"
+
+[project.scripts]
+delphi-compiler-mcp = "delphi_mcp_server.main:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0",
+    "black>=22.0", 
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+    "build>=0.8.0",
+    "twine>=4.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+delphi_mcp_server = ["*.json", "*.md"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+select = ["E", "F", "W", "B", "I", "N", "UP"]

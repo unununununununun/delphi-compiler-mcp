@@ -1,0 +1,2 @@
+[console_scripts]
+delphi-compiler-mcp = delphi_mcp_server.main:main

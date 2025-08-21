@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "delphi-compiler": {
+      "command": "delphi-compiler-mcp",
+      "env": {
+        "DELPHI_PATH": "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0"
+      }
+    }
+  }
+}

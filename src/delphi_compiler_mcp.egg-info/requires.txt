@@ -1,0 +1,8 @@
+mcp>=1.0.0
+fastmcp>=0.1.0
+
+[dev]
+pytest>=7.0
+black>=22.0
+mypy>=1.0
+ruff>=0.1.0

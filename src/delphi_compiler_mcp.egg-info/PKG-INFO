@@ -1,0 +1,333 @@
+Metadata-Version: 2.4
+Name: delphi-compiler-mcp
+Version: 1.0.0
+Summary: MCP Server for Delphi/Object Pascal compilation
+Author: github.com//unununununununun
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/delphi-compiler-mcp
+Project-URL: Repository, https://github.com/yourusername/delphi-compiler-mcp
+Project-URL: Issues, https://github.com/yourusername/delphi-compiler-mcp/issues
+Keywords: mcp,delphi,pascal,compiler,cursor,ide
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Software Development :: Compilers
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: mcp>=1.0.0
+Requires-Dist: fastmcp>=0.1.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: black>=22.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Dynamic: license-file
+
+# Delphi Compiler MCP
+
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that enables seamless compilation of Delphi/Object Pascal projects within [Cursor IDE](https://cursor.sh/), providing native integration with RAD Studio compilers.
+
+## Features
+
+- 🚀 **Direct Integration**: Works natively with Cursor IDE through MCP protocol
+- 🔧 **Dual Compilation**: Supports both `.dpr` (direct compiler) and `.dproj` (MSBuild) projects  
+- 🎯 **Multi-Platform**: Win32 and Win64 compilation support
+- ⚡ **Fast Builds**: Debug and Release configurations
+- 📝 **Rich Feedback**: Detailed error reporting and build logs
+- 🔍 **Auto-Discovery**: Automatically finds project files in current directory
+- 🐳 **Docker Support**: Windows containers with full RAD Studio integration
+
+## Installation
+
+### Using UV (Recommended) ⚡
+
+[UV](https://github.com/astral-sh/uv) is a fast Python package manager that makes installation much quicker:
+
+```bash
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh  # Linux/macOS
+# or
+irm https://astral.sh/uv/install.ps1 | iex       # Windows
+
+# Install Delphi Compiler MCP
+uv tool install delphi-compiler-mcp
+```
+
+### From PyPI (Traditional)
+
+```bash
+pip install delphi-compiler-mcp
+```
+
+### From Source with UV
+
+```bash
+git clone https://github.com/yourusername/delphi-compiler-mcp.git
+cd delphi-compiler-mcp
+uv pip install -e .
+```
+
+### From Source with pip
+
+```bash
+git clone https://github.com/yourusername/delphi-compiler-mcp.git
+cd delphi-compiler-mcp
+pip install -e .
+```
+
+### Docker (Windows Containers) 🐳
+
+```powershell
+# Build and run with Docker
+git clone https://github.com/yourusername/delphi-compiler-mcp.git
+cd delphi-compiler-mcp
+
+# Quick start
+.\scripts\docker-build.ps1
+.\scripts\docker-run.ps1 -DelphiPath "C:\Program Files (x86)\Embarcadero\Studio\23.0"
+```
+
+## Prerequisites
+
+- **Python 3.8+**
+- **Delphi/RAD Studio** (any recent version)
+- **Windows** (currently Windows-only)
+- **Cursor IDE** with MCP support
+
+## Quick Start
+
+### 1. Configure Cursor
+
+Create or update `.cursor/mcp.json` in your project root:
+
+#### For UV installation:
+```json
+{
+  "mcpServers": {
+    "delphi-compiler": {
+      "command": "uv",
+      "args": ["run", "delphi-compiler-mcp"],
+      "env": { 
+        "DELPHI_PATH": "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0" 
+      }
+    }
+  }
+}
+```
+
+#### For traditional pip installation:
+```json
+{
+  "mcpServers": {
+    "delphi-compiler": {
+      "command": "delphi-compiler-mcp",
+      "env": { 
+        "DELPHI_PATH": "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0" 
+      }
+    }
+  }
+}
+```
+
+#### For Docker (Windows containers):
+```json
+{
+  "mcpServers": {
+    "delphi-compiler": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "--platform", "windows/amd64",
+        "-v", "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0:C:\\delphi:ro",
+        "-v", "./:C:\\workspace",
+        "-e", "DELPHI_PATH=C:\\delphi",
+        "delphi-compiler-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+### 2. Set Environment
+
+Set your Delphi installation path (adjust version as needed):
+
+```bash
+# Option 1: Environment variable
+set DELPHI_PATH=C:\Program Files (x86)\Embarcadero\Studio\23.0
+
+# Option 2: In .cursor/mcp.json (shown above)
+```
+
+### 3. Use in Cursor
+
+Open any Delphi project in Cursor and:
+
+- **Build**: Press `Ctrl+B` or ask the AI assistant "Собери проект"
+- **Compile**: Ask the assistant "Скомпилируй проект" 
+- **Custom**: Use specific commands like "Build for Win64 Release"
+
+## CLI Usage
+
+The server can also be run standalone:
+
+#### With UV:
+```bash
+# Start with stdio transport (default for Cursor)
+uv run delphi-compiler-mcp
+
+# Start HTTP server for testing
+uv run delphi-compiler-mcp --transport http --port 8080
+
+# Custom Delphi path
+uv run delphi-compiler-mcp --delphi-path "C:\RAD Studio\22.0"
+
+# Enable debug logging  
+uv run delphi-compiler-mcp --debug --log-file build.log
+```
+
+#### Traditional way:
+```bash
+# Start with stdio transport (default for Cursor)
+delphi-compiler-mcp
+
+# Start HTTP server for testing
+delphi-compiler-mcp --transport http --port 8080
+
+# Custom Delphi path
+delphi-compiler-mcp --delphi-path "C:\RAD Studio\22.0"
+
+# Enable debug logging  
+delphi-compiler-mcp --debug --log-file build.log
+```
+
+## MCP Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `compile` | `project`, `platform`, `config` | Compile project (default: Debug/Win32) |
+| `build` | `project`, `platform` | Build project in Release configuration |
+
+### Parameters
+
+- **project** _(optional)_: Path to `.dpr` or `.dproj` file. Auto-discovered if omitted.
+- **platform** _(optional)_: `Win32` or `Win64`. Default: `Win32`
+- **config** _(optional)_: `Debug` or `Release`. Default: `Debug` (for compile), `Release` (for build)
+
+## Project Structure
+
+```
+your-delphi-project/
+├── .cursor/
+│   └── mcp.json           # Cursor MCP configuration
+├── Project1.dpr           # Main project file
+├── Project1.dproj         # Project file (optional)
+├── Unit1.pas              # Pascal units
+└── last_build.log         # Build log (auto-generated)
+```
+
+## Configuration
+
+### Environment Variables
+
+- `DELPHI_PATH`: Path to Delphi installation root
+- `PATH`: Should include Delphi compiler binaries
+
+### Auto-Detection
+
+The server automatically locates:
+- Delphi compilers (`dcc32.exe`, `dcc64.exe`)
+- MSBuild (`msbuild.exe`) 
+- RAD Studio environment (`rsvars.bat`)
+- Project files (`.dpr`, `.dproj`)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Delphi compiler not found"**
+   - Verify `DELPHI_PATH` environment variable
+   - Ensure Delphi is installed and accessible
+   - Check that `dcc32.exe`/`dcc64.exe` are in PATH or Delphi bin directory
+
+2. **"rsvars.bat not found"**
+   - Usually indicates incorrect `DELPHI_PATH`
+   - Should point to RAD Studio installation root, not bin folder
+
+3. **"No project file found"**
+   - Ensure `.dpr` or `.dproj` files exist in current directory
+   - Use absolute path in `project` parameter if needed
+
+### Debug Mode
+
+Enable detailed logging:
+
+```bash
+delphi-compiler-mcp --debug
+```
+
+Check `last_build.log` for full compiler output.
+
+## Development
+
+### Building from Source
+
+```bash
+git clone https://github.com/yourusername/delphi-compiler-mcp.git
+cd delphi-compiler-mcp
+pip install -e ".[dev]"
+```
+
+### Running Tests
+
+```bash
+pytest tests/
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/
+
+# Type checking  
+mypy src/
+
+# Linting
+ruff check src/
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Model Context Protocol](https://modelcontextprotocol.io/) by Anthropic
+- [Cursor IDE](https://cursor.sh/) for excellent MCP integration
+- Embarcadero for Delphi/RAD Studio
+
+---
+
+## Links
+
+- **Documentation**: [Full Documentation](docs/)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/delphi-compiler-mcp/issues)
+- **PyPI**: [delphi-compiler-mcp](https://pypi.org/project/delphi-compiler-mcp/)
+- **MCP Registry**: [Model Context Protocol](https://modelcontextprotocol.io/)
