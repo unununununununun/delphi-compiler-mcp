@@ -6,7 +6,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/send_to_cursor_chat.py",
+                "${workspaceFolder}/scripts/send_to_cursor_chat.py",
                 "--command", "compile",
                 "--config", "Debug"
             ],
@@ -24,7 +24,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/send_to_cursor_chat.py",
+                "${workspaceFolder}/scripts/send_to_cursor_chat.py",
                 "--command", "build"
             ],
             "group": "build",
@@ -38,7 +38,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/mcp_build_client.py",
+                "${workspaceFolder}/scripts/mcp_build_client.py",
                 "compile",
                 "--config", "Debug"
             ],
@@ -54,7 +54,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/mcp_build_client.py",
+                "${workspaceFolder}/scripts/mcp_build_client.py",
                 "build"
             ],
             "group": "build",
