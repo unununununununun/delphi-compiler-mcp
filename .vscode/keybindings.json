@@ -1,0 +1,27 @@
+[
+    {
+        "key": "ctrl+shift+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP: Compile Delphi Project"
+    },
+    {
+        "key": "ctrl+shift+alt+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP: Build Release"
+    },
+    {
+        "key": "f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP: Compile Delphi Project"
+    },
+    {
+        "key": "ctrl+f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP: Build Release"
+    },
+    {
+        "key": "shift+f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP: Build Debug"
+    }
+]
