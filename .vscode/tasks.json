@@ -2,47 +2,44 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "MCP: Compile (Debug)",
+            "label": "MCP Chat: Compile (Debug)",
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/mcp_build_client.py",
-                "compile",
+                "${workspaceFolder}/send_to_cursor_chat.py",
+                "--command", "compile",
                 "--config", "Debug"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": "$msCompile",
             "presentation": {
-                "reveal": "always",
-                "panel": "new"
+                "reveal": "silent",
+                "close": true
             }
         },
         {
-            "label": "MCP: Build (Release)",
+            "label": "MCP Chat: Build (Release)",
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/mcp_build_client.py",
-                "build"
+                "${workspaceFolder}/send_to_cursor_chat.py",
+                "--command", "build"
             ],
             "group": "build",
-            "problemMatcher": "$msCompile",
             "presentation": {
-                "reveal": "always",
-                "panel": "new"
+                "reveal": "silent",
+                "close": true
             }
         },
         {
-            "label": "MCP: Compile Win64 (Debug)",
+            "label": "MCP Terminal: Compile (Debug)",
             "type": "shell",
             "command": "python",
             "args": [
                 "${workspaceFolder}/mcp_build_client.py",
                 "compile",
-                "--platform", "Win64",
                 "--config", "Debug"
             ],
             "group": "build",
@@ -53,13 +50,12 @@
             }
         },
         {
-            "label": "MCP: Build Win64 (Release)",
+            "label": "MCP Terminal: Build (Release)",
             "type": "shell",
             "command": "python",
             "args": [
                 "${workspaceFolder}/mcp_build_client.py",
-                "build",
-                "--platform", "Win64"
+                "build"
             ],
             "group": "build",
             "problemMatcher": "$msCompile",

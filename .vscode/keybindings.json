@@ -1,22 +1,22 @@
 [
     {
         "key": "f9",
-        "command": "cursorChat.sendMessage",
-        "args": "@delphi-compiler compile"
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Chat: Compile (Debug)"
     },
     {
         "key": "ctrl+f9",
-        "command": "cursorChat.sendMessage", 
-        "args": "@delphi-compiler build"
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Chat: Build (Release)"
     },
     {
         "key": "shift+f9",
-        "command": "cursorChat.sendMessage",
-        "args": "@delphi-compiler compile --platform Win64"
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Terminal: Compile (Debug)"
     },
     {
         "key": "ctrl+shift+f9",
-        "command": "cursorChat.sendMessage",
-        "args": "@delphi-compiler build --platform Win64"
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Terminal: Build (Release)"
     }
 ]
