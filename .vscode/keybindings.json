@@ -1,32 +1,22 @@
 [
     {
-        "key": "ctrl+shift+b",
-        "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Compile (Debug)"
-    },
-    {
-        "key": "ctrl+shift+alt+b",
-        "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Build (Release)"
-    },
-    {
         "key": "f9",
-        "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Compile (Debug)"
+        "command": "cursorChat.sendMessage",
+        "args": "@delphi-compiler compile"
     },
     {
         "key": "ctrl+f9",
-        "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Build (Release)"
+        "command": "cursorChat.sendMessage", 
+        "args": "@delphi-compiler build"
     },
     {
         "key": "shift+f9",
-        "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Compile Win64 (Debug)"
+        "command": "cursorChat.sendMessage",
+        "args": "@delphi-compiler compile --platform Win64"
     },
     {
         "key": "ctrl+shift+f9",
-        "command": "workbench.action.tasks.runTask",
-        "args": "MCP: Build Win64 (Release)"
+        "command": "cursorChat.sendMessage",
+        "args": "@delphi-compiler build --platform Win64"
     }
 ]
