@@ -54,36 +54,31 @@ class DelphiMCPServer:
         @self.mcp.tool()
         async def compile(
             project: str | None = None,
-            platform: str | None = None,
-            config: str | None = None,
         ) -> str:
-            """Compile Delphi project (.dpr or .dproj).
+            """Compile Delphi project (.dpr or .dproj) in Debug configuration.
 
             Args:
                 project: Path to project file. If omitted, searches current directory.
-                platform: Target platform (Win32, Win64). Defaults to Win32.
-                config: Build configuration (Debug, Release). Defaults to Debug.
 
             Returns:
                 Compilation result with error/warning summary.
             """
-            return await self._compile_project(project, platform, config)
+            return await self._compile_project(project, debug_build=True)
 
         @self.mcp.tool()
         async def build(
-            project: str | None = None, 
-            platform: str = "Win32"
+            project: str | None = None,
         ) -> str:
             """Build project in Release configuration (alias for compile with Release config).
-            
+
             Args:
                 project: Path to project file. If omitted, searches current directory.
-                platform: Target platform (Win32, Win64). Defaults to Win32.
-                
+
             Returns:
                 Build result with error/warning summary.
             """
-            return await self._compile_project(project, platform, "Release")
+            # Pass only Release config; platform resolved automatically
+            return await self._compile_project(project, debug_build=False)
 
     def find_delphi_compiler(self, platform: str) -> str | None:
         """Find Delphi compiler executable for the specified platform."""
@@ -186,8 +181,8 @@ class DelphiMCPServer:
     async def _compile_project(
         self,
         project: str | None = None,
-        platform: str | None = None,
-        config: str | None = None,
+        *,
+        debug_build: bool = True,
     ) -> str:
         """Internal method to compile Delphi project."""
         # Auto-discover project if not provided
@@ -201,8 +196,8 @@ class DelphiMCPServer:
         if not proj_path.exists():
             return f"ERROR: Project file not found: {project}"
 
-        platform = platform or "Win32"
-        config = config or "Debug"
+        platform = "Win32"  # default compiler
+        config = "Debug" if debug_build else "Release"
 
         if proj_path.suffix.lower() == ".dproj":
             rsvars = self.find_rsvars()
@@ -214,10 +209,6 @@ class DelphiMCPServer:
                 "call", rsvars, "&&",
                 "msbuild.exe", str(proj_path), "/t:Build"
             ]
-            if platform:
-                cmd.extend([f"/p:Platform={platform}"])
-            if config:
-                cmd.extend([f"/p:Config={config}"])
         else:
             # For .dpr, find linked .dpr file
             dpr_candidates = list(proj_path.parent.glob("*.dpr"))
@@ -229,11 +220,7 @@ class DelphiMCPServer:
             if not compiler:
                 return f"ERROR: Delphi compiler for {platform} not found"
             cmd = [compiler, str(dpr_file)]
-            if config:
-                if config.lower() == "release":
-                    cmd.append("-DRELEASE")
-                elif config.lower() == "debug":
-                    cmd.append("-DDEBUG")
+            cmd.append("-DRELEASE" if not debug_build else "-DDEBUG")
 
         exit_code, output = await self.run_subprocess(cmd)
         logging.info("Run %s", " ".join(cmd))
