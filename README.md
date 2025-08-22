@@ -12,7 +12,6 @@ pip install delphi-compiler-mcp
 ### From local source
 ```bash
 git clone https://github.com/yourusername/delphi-compiler-mcp.git
-cd delphi-compiler-mcp/production-package
 pip install .
 ```
 
