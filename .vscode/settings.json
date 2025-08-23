@@ -1,0 +1,14 @@
+{
+    "macros": {
+        "compileDelphi": [
+            {"command": "workbench.action.chat.open"},
+            {"command": "type", "args": {"text": "@delphi-compiler compile"}},
+            {"command": "workbench.action.chat.submitInput"}
+        ],
+        "buildDelphi": [
+            {"command": "workbench.action.chat.open"},
+            {"command": "type", "args": {"text": "@delphi-compiler build"}},
+            {"command": "workbench.action.chat.submitInput"}
+        ]
+    }
+}

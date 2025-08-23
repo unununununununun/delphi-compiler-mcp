@@ -1,0 +1,22 @@
+[
+    {
+        "key": "f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Chat: Compile (Debug)"
+    },
+    {
+        "key": "ctrl+f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Chat: Build (Release)"
+    },
+    {
+        "key": "shift+f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Terminal: Compile (Debug)"
+    },
+    {
+        "key": "ctrl+shift+f9",
+        "command": "workbench.action.tasks.runTask",
+        "args": "MCP Terminal: Build (Release)"
+    }
+]

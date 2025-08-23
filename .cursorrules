@@ -1,0 +1,42 @@
+# Cursor MCP Integration for Delphi Build
+
+## Quick Build Commands
+
+You can use the following MCP commands directly in Cursor:
+
+### Compile Debug (default)
+```
+@delphi-compiler compile
+```
+
+### Build Release
+```
+@delphi-compiler build
+```
+
+### Compile with specific config
+```
+@delphi-compiler compile --config Release --platform Win64
+```
+
+### Build for Win64
+```
+@delphi-compiler build --platform Win64
+```
+
+## Keyboard Shortcuts
+
+The following shortcuts are configured in .vscode/keybindings.json:
+
+- **F9** - Compile Debug (Win32)
+- **Ctrl+F9** - Build Release (Win32)  
+- **Shift+F9** - Compile Debug (Win64)
+- **Ctrl+Shift+F9** - Build Release (Win64)
+- **Ctrl+Shift+B** - Default build task (Compile Debug)
+
+## VS Code Tasks
+
+You can also run build tasks from the Command Palette:
+1. Press `Ctrl+Shift+P`
+2. Type "Run Task"
+3. Select one of the MCP build tasks
