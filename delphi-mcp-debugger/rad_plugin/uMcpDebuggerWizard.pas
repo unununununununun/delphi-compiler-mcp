@@ -4,7 +4,7 @@ interface
 
 uses
   ToolsAPI, System.SysUtils, System.Classes, Generics.Collections, System.Types,
-  uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls;
+  uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls, System.Threading;
 
 type
   TMcpDebuggerWizard = class(TNotifierObject, IOTAWizard, IOTADebuggerNotifier)
@@ -65,20 +65,36 @@ var
   DS: IOTADebuggerServices;
 begin
   inherited Create;
+  FAction := nil;
+  FImageList := nil;
   FRpc := TJsonRpcServer.Create(nil);
   FRpc.OnRequest := HandleRequest;
   FRpc.OnClientCountChanged := UpdateClientStatus;
   FBreakpoints := TDictionary<string, IOTABreakpoint>.Create;
   LPort := StrToIntDef(GetEnvironmentVariable('RAD_PLUGIN_PORT'), 5645);
   LToken := GetEnvironmentVariable('RAD_PLUGIN_TOKEN');
-  FRpc.Start('127.0.0.1', LPort, LToken);
+  try
+    FRpc.Start('127.0.0.1', LPort, LToken);
+  except
+    // не валим IDE, просто протоколируем в вывод событий
+    SendOutput(Format('RPC start failed on %d\n', [LPort]));
+  end;
   DS := DebuggerServices;
   if Assigned(DS) then
     FNotifierIndex := DS.AddNotifier(Self)
   else
     FNotifierIndex := -1;
-  CreateStatusAction;
-  UpdateClientStatus(0);
+  // UI добавляем после старта IDE цикла сообщений
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      try
+        CreateStatusAction;
+        UpdateClientStatus(0);
+      except
+        // игнорируем ошибки UI
+      end;
+    end);
 end;
 
 destructor TMcpDebuggerWizard.Destroy;
@@ -92,7 +108,10 @@ begin
       DS.RemoveNotifier(FNotifierIndex);
   end;
   FBreakpoints.Free;
-  FRpc.Stop;
+  try
+    FRpc.Stop;
+  except
+  end;
   FRpc.Free;
   if Assigned(FImageList) then FImageList.Free;
   if Assigned(FAction) then FAction.Free;
@@ -106,6 +125,8 @@ var
   I: Integer;
   Btn: TActionClientItem;
 begin
+  if Assigned(FAction) then Exit;
+
   FImageList := TImageList.Create(nil);
   FImageList.Width := 12;
   FImageList.Height := 12;
@@ -133,7 +154,7 @@ begin
   FAction.ImageIndex := FRedIdx;
 
   ToolBar := nil;
-  if Screen.FormCount > 0 then
+  if (Screen <> nil) and (Screen.FormCount > 0) then
   begin
     for I := 0 to Screen.Forms[0].ComponentCount - 1 do
       if Screen.Forms[0].Components[I] is TActionToolBar then
@@ -142,9 +163,12 @@ begin
         Break;
       end;
   end;
-  if Assigned(ToolBar) then
+  if Assigned(ToolBar) and Assigned(ToolBar.ActionManager) then
   begin
-    ToolBar.ActionManager.Images := FImageList;
+    if ToolBar.ActionManager.Images = nil then
+      ToolBar.ActionManager.Images := FImageList
+    else
+      FImageList.Assign(ToolBar.ActionManager.Images);
     FAction.ActionList := ToolBar.ActionManager;
     Btn := ToolBar.AddAction(FAction);
     Btn.AutoSize := True;
@@ -235,7 +259,13 @@ begin
   Result := '';
   BS := BreakpointServices;
   if not Assigned(BS) then Exit;
-  BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '');
+  try
+    // RAD Studio 12.3: используем расширенную сигнатуру с Enabled/PassCount/LogIndex
+    BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '', True, 0, 0);
+  except
+    // fallback на короткую сигнатуру, если отличается
+    BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '');
+  end;
   if Assigned(BP) then
   begin
     Key := Format('%s:%d', [AFile, ALine]);
