@@ -4,8 +4,6 @@ package DelphiMcpDebuggerR;
 
 requires
   rtl,
-  vcl,
-  vclimg,
   IndyCore,
   IndySystem,
   IndyProtocols;

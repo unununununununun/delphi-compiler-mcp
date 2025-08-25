@@ -4,7 +4,6 @@
     <ProjectGuid>{7C2B08B8-9B52-4A3D-9D2A-7F4E8B4C2A11}</ProjectGuid>
     <ProjectVersion>19.0</ProjectVersion>
     <MainSource>DelphiMcpDebuggerR.dpk</MainSource>
-    <FrameworkType>VCL</FrameworkType>
     <Base>True</Base>
     <Config Condition=" '$(Config)' == '' ">Release</Config>
     <Platform Condition=" '$(Platform)' == '' ">Win32</Platform>
@@ -28,8 +27,6 @@
       <MainSource>DelphiMcpDebuggerR.dpk</MainSource>
     </DelphiCompile>
     <DCCReference Include="rtl.dcp" />
-    <DCCReference Include="vcl.dcp" />
-    <DCCReference Include="vclimg.dcp" />
     <DCCReference Include="IndyCore.dcp" />
     <DCCReference Include="IndySystem.dcp" />
     <DCCReference Include="IndyProtocols.dcp" />
