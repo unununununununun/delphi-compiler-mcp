@@ -8,13 +8,17 @@ uses
 
 type
   TOnJsonRequest = reference to procedure(const AId: string; const AMethod: string; const AParams: string; var AResult: string; var AError: string);
+  TOnClientCountChanged = reference to procedure(ACount: Integer);
 
   TJsonRpcServer = class(TComponent)
   private
     FTcp: TIdTCPServer;
     FOnRequest: TOnJsonRequest;
+    FOnClientCountChanged: TOnClientCountChanged;
     FToken: string;
     procedure DoExecute(AContext: TIdContext);
+    procedure DoConnect(AContext: TIdContext);
+    procedure DoDisconnect(AContext: TIdContext);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -22,6 +26,7 @@ type
     procedure Stop;
     procedure Notify(const AMethod, AParamsJson: string);
     property OnRequest: TOnJsonRequest read FOnRequest write FOnRequest;
+    property OnClientCountChanged: TOnClientCountChanged read FOnClientCountChanged write FOnClientCountChanged;
   end;
 
 implementation
@@ -34,6 +39,8 @@ begin
   inherited;
   FTcp := TIdTCPServer.Create(Self);
   FTcp.OnExecute := DoExecute;
+  FTcp.OnConnect := DoConnect;
+  FTcp.OnDisconnect := DoDisconnect;
 end;
 
 destructor TJsonRpcServer.Destroy;
@@ -91,6 +98,18 @@ begin
       FTcp.Contexts.UnlockList;
     end;
   end;
+end;
+
+procedure TJsonRpcServer.DoConnect(AContext: TIdContext);
+begin
+  if Assigned(FOnClientCountChanged) then
+    FOnClientCountChanged(FTcp.Contexts.Count);
+end;
+
+procedure TJsonRpcServer.DoDisconnect(AContext: TIdContext);
+begin
+  if Assigned(FOnClientCountChanged) then
+    FOnClientCountChanged(FTcp.Contexts.Count);
 end;
 
 procedure TJsonRpcServer.DoExecute(AContext: TIdContext);

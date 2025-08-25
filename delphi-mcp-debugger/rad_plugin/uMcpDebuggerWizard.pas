@@ -3,7 +3,7 @@ unit uMcpDebuggerWizard;
 interface
 
 uses
-  ToolsAPI, System.SysUtils, System.Classes, Generics.Collections, uJsonRpcServer;
+  ToolsAPI, System.SysUtils, System.Classes, Generics.Collections, uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls;
 
 type
   TMcpDebuggerWizard = class(TNotifierObject, IOTAWizard, IOTADebuggerNotifier)
@@ -11,6 +11,10 @@ type
     FRpc: TJsonRpcServer;
     FBreakpoints: TDictionary<string, IOTABreakpoint>;
     FNotifierIndex: Integer;
+    FAction: TAction;
+    FImageList: TImageList;
+    FGreenIdx: Integer;
+    FRedIdx: Integer;
     procedure HandleRequest(const AId, AMethod, AParams: string; var AResult, AError: string);
     function DebuggerServices: IOTADebuggerServices;
     function BreakpointServices: IOTABreakpointServices;
@@ -18,6 +22,8 @@ type
     function RemoveBreakpointInternal(const AFile: string; ALine: Integer; const AId: string): Boolean;
     procedure SendOutput(const AText: string);
     procedure SendStopped(const AReason: string; ThreadId: Integer);
+    procedure UpdateClientStatus(ACount: Integer);
+    procedure CreateStatusAction;
   public
     constructor Create;
     destructor Destroy; override;
@@ -42,7 +48,7 @@ procedure Register;
 implementation
 
 uses
-  System.JSON;
+  System.JSON, Vcl.Forms, Vcl.Graphics, Winapi.Windows;
 
 procedure Register;
 begin
@@ -60,6 +66,7 @@ begin
   inherited Create;
   FRpc := TJsonRpcServer.Create(nil);
   FRpc.OnRequest := HandleRequest;
+  FRpc.OnClientCountChanged := UpdateClientStatus;
   FBreakpoints := TDictionary<string, IOTABreakpoint>.Create;
   LPort := StrToIntDef(GetEnvironmentVariable('RAD_PLUGIN_PORT'), 5645);
   LToken := GetEnvironmentVariable('RAD_PLUGIN_TOKEN');
@@ -69,6 +76,8 @@ begin
     FNotifierIndex := DS.AddNotifier(Self)
   else
     FNotifierIndex := -1;
+  CreateStatusAction;
+  UpdateClientStatus(0);
 end;
 
 destructor TMcpDebuggerWizard.Destroy;
@@ -84,7 +93,82 @@ begin
   FBreakpoints.Free;
   FRpc.Stop;
   FRpc.Free;
+  if Assigned(FImageList) then FImageList.Free;
+  if Assigned(FAction) then FAction.Free;
   inherited;
+end;
+
+procedure TMcpDebuggerWizard.CreateStatusAction;
+var
+  GreenBmp, RedBmp: TBitmap;
+  MainActionList: TCustomActionList;
+  MainMenu: TMainMenu;
+  ToolBar: TActionToolBar;
+begin
+  FImageList := TImageList.Create(nil);
+  FImageList.Width := 12;
+  FImageList.Height := 12;
+
+  GreenBmp := TBitmap.Create;
+  RedBmp := TBitmap.Create;
+  try
+    GreenBmp.SetSize(12, 12);
+    RedBmp.SetSize(12, 12);
+    GreenBmp.Canvas.Brush.Color := clLime;
+    GreenBmp.Canvas.FillRect(Rect(0,0,12,12));
+    RedBmp.Canvas.Brush.Color := clRed;
+    RedBmp.Canvas.FillRect(Rect(0,0,12,12));
+    FGreenIdx := FImageList.Add(GreenBmp, nil);
+    FRedIdx := FImageList.Add(RedBmp, nil);
+  finally
+    GreenBmp.Free;
+    RedBmp.Free;
+  end;
+
+  FAction := TAction.Create(nil);
+  FAction.Caption := 'MCP Debug';
+  FAction.Hint := 'Статус подключения MCP клиента';
+  FAction.Enabled := True;
+  FAction.ImageIndex := FRedIdx;
+
+  // Добавление на стандартную панель: найдём первый доступный ActionToolBar IDE
+  ToolBar := nil;
+  if Screen.FormCount > 0 then
+  begin
+    // попытка пройти по контролам главной формы и найти ActionToolBar
+    var I: Integer;
+    for I := 0 to Screen.Forms[0].ComponentCount - 1 do
+      if Screen.Forms[0].Components[I] is TActionToolBar then
+      begin
+        ToolBar := TActionToolBar(Screen.Forms[0].Components[I]);
+        Break;
+      end;
+  end;
+  if Assigned(ToolBar) then
+  begin
+    // Вставим кнопку в тулбар
+    ToolBar.ActionManager.Images := FImageList;
+    FAction.ActionList := ToolBar.ActionManager;
+    var Btn := ToolBar.AddAction(FAction);
+    Btn.AutoSize := True;
+  end;
+end;
+
+procedure TMcpDebuggerWizard.UpdateClientStatus(ACount: Integer);
+begin
+  if Assigned(FAction) then
+  begin
+    if ACount > 0 then
+    begin
+      FAction.ImageIndex := FGreenIdx;
+      FAction.Hint := 'MCP клиент подключен';
+    end
+    else
+    begin
+      FAction.ImageIndex := FRedIdx;
+      FAction.Hint := 'MCP клиент не подключен';
+    end;
+  end;
 end;
 
 procedure TMcpDebuggerWizard.Execute;
@@ -154,14 +238,12 @@ begin
   Result := '';
   BS := BreakpointServices;
   if not Assigned(BS) then Exit;
-  // Примечание: создание исходного брейкпоинта в OTAPI может отличаться по версиям.
-  // В большинстве версий поддерживается AddSourceBreakpoint(FileName, Line), возвращает IOTASourceBreakpoint.
   BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '');
   if Assigned(BP) then
   begin
     Key := Format('%s:%d', [AFile, ALine]);
     FBreakpoints.AddOrSetValue(Key, BP as IOTABreakpoint);
-    Result := Key; // используем ключ как id для MVP
+    Result := Key;
   end;
 end;
 
@@ -186,6 +268,7 @@ begin
   end;
 end;
 
+// RPC handler
 procedure TMcpDebuggerWizard.HandleRequest(const AId, AMethod, AParams: string; var AResult, AError: string);
 var
   Params: TJSONObject;
@@ -301,7 +384,6 @@ end;
 
 procedure TMcpDebuggerWizard.DebuggerStateChange(const NewState: TOTAEditState);
 begin
-  // When paused on breakpoint, IDE switches state; emit stopped as heuristic
   SendStopped('breakpoint', 0);
 end;
 
