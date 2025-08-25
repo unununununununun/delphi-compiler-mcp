@@ -28,8 +28,6 @@
     </DelphiCompile>
     <DCCReference Include="rtl.dcp" />
     <DCCReference Include="vcl.dcp" />
-    <DCCReference Include="vclimg.dcp" />
-    <DCCReference Include="vclactnband.dcp" />
     <DCCReference Include="designide.dcp" />
     <DCCReference Include="IndyCore.dcp" />
     <DCCReference Include="IndySystem.dcp" />

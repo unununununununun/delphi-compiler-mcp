@@ -76,24 +76,26 @@ begin
   try
     FRpc.Start('127.0.0.1', LPort, LToken);
   except
-    // не валим IDE, просто протоколируем в вывод событий
-    SendOutput(Format('RPC start failed on %d\n', [LPort]));
+    // не валим IDE
   end;
   DS := DebuggerServices;
   if Assigned(DS) then
     FNotifierIndex := DS.AddNotifier(Self)
   else
     FNotifierIndex := -1;
-  // UI добавляем после старта IDE цикла сообщений
+  // UI добавляем сильно отложенно, чтобы не мешать проверке зависимостей/загрузке пакетов
   TThread.ForceQueue(nil,
     procedure
     begin
-      try
-        CreateStatusAction;
-        UpdateClientStatus(0);
-      except
-        // игнорируем ошибки UI
-      end;
+      TThread.ForceQueue(nil,
+        procedure
+        begin
+          try
+            CreateStatusAction;
+            UpdateClientStatus(0);
+          except
+          end;
+        end);
     end);
 end;
 
@@ -126,6 +128,7 @@ var
   Btn: TActionClientItem;
 begin
   if Assigned(FAction) then Exit;
+  if (Screen = nil) or (Screen.FormCount = 0) then Exit;
 
   FImageList := TImageList.Create(nil);
   FImageList.Width := 12;
@@ -147,28 +150,23 @@ begin
     RedBmp.Free;
   end;
 
-  FAction := TAction.Create(nil);
+  FAction := TAction.Create(Screen.Forms[0]);
   FAction.Caption := 'MCP Debug';
   FAction.Hint := 'Статус подключения MCP клиента';
   FAction.Enabled := True;
   FAction.ImageIndex := FRedIdx;
 
   ToolBar := nil;
-  if (Screen <> nil) and (Screen.FormCount > 0) then
-  begin
-    for I := 0 to Screen.Forms[0].ComponentCount - 1 do
-      if Screen.Forms[0].Components[I] is TActionToolBar then
-      begin
-        ToolBar := TActionToolBar(Screen.Forms[0].Components[I]);
-        Break;
-      end;
-  end;
+  for I := 0 to Screen.Forms[0].ComponentCount - 1 do
+    if Screen.Forms[0].Components[I] is TActionToolBar then
+    begin
+      ToolBar := TActionToolBar(Screen.Forms[0].Components[I]);
+      Break;
+    end;
   if Assigned(ToolBar) and Assigned(ToolBar.ActionManager) then
   begin
-    if ToolBar.ActionManager.Images = nil then
-      ToolBar.ActionManager.Images := FImageList
-    else
-      FImageList.Assign(ToolBar.ActionManager.Images);
+    // не трогаем глобальные Images, используем индекс в нашей локальной ImageList только для отображения
+    ToolBar.ActionManager.Images := FImageList;
     FAction.ActionList := ToolBar.ActionManager;
     Btn := ToolBar.AddAction(FAction);
     Btn.AutoSize := True;
@@ -194,7 +192,6 @@ end;
 
 procedure TMcpDebuggerWizard.Execute;
 begin
-  // no UI
 end;
 
 function TMcpDebuggerWizard.GetIDString: string;
@@ -260,10 +257,8 @@ begin
   BS := BreakpointServices;
   if not Assigned(BS) then Exit;
   try
-    // RAD Studio 12.3: используем расширенную сигнатуру с Enabled/PassCount/LogIndex
     BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '', True, 0, 0);
   except
-    // fallback на короткую сигнатуру, если отличается
     BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '');
   end;
   if Assigned(BP) then
