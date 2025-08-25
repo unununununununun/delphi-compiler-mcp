@@ -9,9 +9,12 @@ requires
   vclimg,
   vclactnband,
   designide,
-  DelphiMcpDebuggerR;
+  IndyCore,
+  IndySystem,
+  IndyProtocols;
 
 contains
-  uMcpDebuggerWizard in 'uMcpDebuggerWizard.pas';
+  uMcpDebuggerWizard in 'uMcpDebuggerWizard.pas',
+  uJsonRpcServer in 'uJsonRpcServer.pas';
 
 end.
