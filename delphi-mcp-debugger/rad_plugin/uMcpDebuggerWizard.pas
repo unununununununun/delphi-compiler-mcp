@@ -3,7 +3,8 @@ unit uMcpDebuggerWizard;
 interface
 
 uses
-  ToolsAPI, System.SysUtils, System.Classes, Generics.Collections, uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls;
+  ToolsAPI, System.SysUtils, System.Classes, Generics.Collections, System.Types,
+  uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls;
 
 type
   TMcpDebuggerWizard = class(TNotifierObject, IOTAWizard, IOTADebuggerNotifier)
@@ -48,7 +49,7 @@ procedure Register;
 implementation
 
 uses
-  System.JSON, Vcl.Forms, Vcl.Graphics, Winapi.Windows;
+  System.JSON, Vcl.Forms, Winapi.Windows;
 
 procedure Register;
 begin
@@ -101,9 +102,9 @@ end;
 procedure TMcpDebuggerWizard.CreateStatusAction;
 var
   GreenBmp, RedBmp: TBitmap;
-  MainActionList: TCustomActionList;
-  MainMenu: TMainMenu;
   ToolBar: TActionToolBar;
+  I: Integer;
+  Btn: TActionClientItem;
 begin
   FImageList := TImageList.Create(nil);
   FImageList.Width := 12;
@@ -131,12 +132,9 @@ begin
   FAction.Enabled := True;
   FAction.ImageIndex := FRedIdx;
 
-  // Добавление на стандартную панель: найдём первый доступный ActionToolBar IDE
   ToolBar := nil;
   if Screen.FormCount > 0 then
   begin
-    // попытка пройти по контролам главной формы и найти ActionToolBar
-    var I: Integer;
     for I := 0 to Screen.Forms[0].ComponentCount - 1 do
       if Screen.Forms[0].Components[I] is TActionToolBar then
       begin
@@ -146,10 +144,9 @@ begin
   end;
   if Assigned(ToolBar) then
   begin
-    // Вставим кнопку в тулбар
     ToolBar.ActionManager.Images := FImageList;
     FAction.ActionList := ToolBar.ActionManager;
-    var Btn := ToolBar.AddAction(FAction);
+    Btn := ToolBar.AddAction(FAction);
     Btn.AutoSize := True;
   end;
 end;
@@ -268,7 +265,6 @@ begin
   end;
 end;
 
-// RPC handler
 procedure TMcpDebuggerWizard.HandleRequest(const AId, AMethod, AParams: string; var AResult, AError: string);
 var
   Params: TJSONObject;
@@ -350,8 +346,6 @@ begin
   end;
 end;
 
-// IOTADebuggerNotifier
-
 procedure TMcpDebuggerWizard.ProcessCreated(const Process: IOTAProcess);
 begin
   SendOutput('process created\n');
@@ -364,22 +358,18 @@ end;
 
 procedure TMcpDebuggerWizard.BreakpointAdded(const Breakpoint: IOTABreakpoint);
 begin
-  // no-op
 end;
 
 procedure TMcpDebuggerWizard.BreakpointDeleted(const Breakpoint: IOTABreakpoint);
 begin
-  // no-op
 end;
 
 procedure TMcpDebuggerWizard.BreakpointChanged(const Breakpoint: IOTABreakpoint);
 begin
-  // no-op
 end;
 
 procedure TMcpDebuggerWizard.WatchListChanged;
 begin
-  // no-op
 end;
 
 procedure TMcpDebuggerWizard.DebuggerStateChange(const NewState: TOTAEditState);
@@ -389,7 +379,6 @@ end;
 
 procedure TMcpDebuggerWizard.LocationUpdated(const Thread: IOTAThread; const SourcePosition: IOTAAddress);
 begin
-  // could emit finer-grained updates if needed
 end;
 
 end.

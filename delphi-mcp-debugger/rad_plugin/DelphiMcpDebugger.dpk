@@ -6,6 +6,8 @@ package DelphiMcpDebugger;
 requires
   rtl,
   vcl,
+  vclimg,
+  vclactnband,
   designide,
   IndyCore,
   IndySystem,
