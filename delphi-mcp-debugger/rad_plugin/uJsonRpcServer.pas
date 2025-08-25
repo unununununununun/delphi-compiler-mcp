@@ -20,6 +20,7 @@ type
     destructor Destroy; override;
     procedure Start(Host: string; Port: Integer; const Token: string = '');
     procedure Stop;
+    procedure Notify(const AMethod, AParamsJson: string);
     property OnRequest: TOnJsonRequest read FOnRequest write FOnRequest;
   end;
 
@@ -51,6 +52,45 @@ end;
 procedure TJsonRpcServer.Stop;
 begin
   FTcp.Active := False;
+end;
+
+procedure TJsonRpcServer.Notify(const AMethod, AParamsJson: string);
+var
+  LObj: TJSONObject;
+  LJson: string;
+  LList: TList;
+  I: Integer;
+  Ctx: TIdContext;
+begin
+  LObj := TJSONObject.Create;
+  try
+    LObj.AddPair('jsonrpc', '2.0');
+    LObj.AddPair('method', AMethod);
+    if AParamsJson <> '' then
+      LObj.AddPair('params', TJSONObject.ParseJSONValue(AParamsJson) as TJSONValue)
+    else
+      LObj.AddPair('params', TJSONObject.Create);
+    LJson := LObj.ToJSON;
+  finally
+    LObj.Free;
+  end;
+  if FTcp.Active then
+  begin
+    LList := FTcp.Contexts.LockList;
+    try
+      for I := 0 to LList.Count - 1 do
+      begin
+        Ctx := TIdContext(LList[I]);
+        try
+          Ctx.Connection.IOHandler.WriteLn(LJson);
+        except
+          // ignore write errors
+        end;
+      end;
+    finally
+      FTcp.Contexts.UnlockList;
+    end;
+  end;
 end;
 
 procedure TJsonRpcServer.DoExecute(AContext: TIdContext);
