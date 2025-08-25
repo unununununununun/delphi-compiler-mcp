@@ -1,0 +1,18 @@
+package DelphiMcpDebugger;
+
+{$R *.res}
+{$R *.dcr}
+
+requires
+  rtl,
+  vcl,
+  designide,
+  IndyCore,
+  IndySystem,
+  IndyProtocols;
+
+contains
+  uMcpDebuggerWizard in 'uMcpDebuggerWizard.pas',
+  uJsonRpcServer in 'uJsonRpcServer.pas';
+
+end.
