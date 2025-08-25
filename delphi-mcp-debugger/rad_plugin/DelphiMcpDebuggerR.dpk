@@ -1,0 +1,16 @@
+package DelphiMcpDebuggerR;
+
+{$R *.res}
+
+requires
+  rtl,
+  vcl,
+  vclimg,
+  IndyCore,
+  IndySystem,
+  IndyProtocols;
+
+contains
+  uJsonRpcServer in 'uJsonRpcServer.pas';
+
+end.

@@ -6,13 +6,12 @@ package DelphiMcpDebugger;
 requires
   rtl,
   vcl,
+  vclimg,
+  vclactnband,
   designide,
-  IndyCore,
-  IndySystem,
-  IndyProtocols;
+  DelphiMcpDebuggerR;
 
 contains
-  uMcpDebuggerWizard in 'uMcpDebuggerWizard.pas',
-  uJsonRpcServer in 'uJsonRpcServer.pas';
+  uMcpDebuggerWizard in 'uMcpDebuggerWizard.pas';
 
 end.

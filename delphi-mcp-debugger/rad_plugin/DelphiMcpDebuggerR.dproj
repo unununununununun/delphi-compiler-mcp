@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{8A4A6A9B-6B7B-4F8B-A7A2-3C3A8C2F1E55}</ProjectGuid>
+    <ProjectGuid>{7C2B08B8-9B52-4A3D-9D2A-7F4E8B4C2A11}</ProjectGuid>
     <ProjectVersion>19.0</ProjectVersion>
-    <MainSource>DelphiMcpDebugger.dpk</MainSource>
+    <MainSource>DelphiMcpDebuggerR.dpk</MainSource>
     <FrameworkType>VCL</FrameworkType>
     <Base>True</Base>
-    <Config Condition=" '$(Config)' == '' ">Debug</Config>
+    <Config Condition=" '$(Config)' == '' ">Release</Config>
     <Platform Condition=" '$(Platform)' == '' ">Win32</Platform>
     <TargetedPlatforms>1</TargetedPlatforms>
     <AppType>Package</AppType>
-    <DesignOnlyPackage>true</DesignOnlyPackage>
+    <DesignOnlyPackage>false</DesignOnlyPackage>
+    <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Config)'=='Debug'">
     <DCC_DebugInformation>True</DCC_DebugInformation>
@@ -23,16 +24,16 @@
     <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
   </PropertyGroup>
   <ItemGroup>
-    <DelphiCompile Include="DelphiMcpDebugger.dpk">
-      <MainSource>DelphiMcpDebugger.dpk</MainSource>
+    <DelphiCompile Include="DelphiMcpDebuggerR.dpk">
+      <MainSource>DelphiMcpDebuggerR.dpk</MainSource>
     </DelphiCompile>
     <DCCReference Include="rtl.dcp" />
     <DCCReference Include="vcl.dcp" />
     <DCCReference Include="vclimg.dcp" />
-    <DCCReference Include="vclactnband.dcp" />
-    <DCCReference Include="designide.dcp" />
-    <DCCReference Include="DelphiMcpDebuggerR.dcp" />
-    <DCCReference Include="uMcpDebuggerWizard.pas" />
+    <DCCReference Include="IndyCore.dcp" />
+    <DCCReference Include="IndySystem.dcp" />
+    <DCCReference Include="IndyProtocols.dcp" />
+    <DCCReference Include="uJsonRpcServer.pas" />
   </ItemGroup>
   <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" />
 </Project>
