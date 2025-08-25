@@ -4,7 +4,7 @@ interface
 
 uses
   ToolsAPI, System.SysUtils, System.Classes, Generics.Collections, System.Types,
-  uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls, System.Threading;
+  System.Classes, uJsonRpcServer, Vcl.Graphics, Vcl.Controls, Vcl.ImgList, Vcl.Menus, Vcl.ActnMan, Vcl.ActnList, Vcl.ActnCtrls;
 
 type
   TMcpDebuggerWizard = class(TNotifierObject, IOTAWizard, IOTADebuggerNotifier)
@@ -25,6 +25,7 @@ type
     procedure SendStopped(const AReason: string; ThreadId: Integer);
     procedure UpdateClientStatus(ACount: Integer);
     procedure CreateStatusAction;
+    procedure InitLater;
   public
     constructor Create;
     destructor Destroy; override;
@@ -59,44 +60,14 @@ end;
 { TMcpDebuggerWizard }
 
 constructor TMcpDebuggerWizard.Create;
-var
-  LPort: Integer;
-  LToken: string;
-  DS: IOTADebuggerServices;
 begin
   inherited Create;
-  FAction := nil;
-  FImageList := nil;
   FRpc := TJsonRpcServer.Create(nil);
   FRpc.OnRequest := HandleRequest;
   FRpc.OnClientCountChanged := UpdateClientStatus;
   FBreakpoints := TDictionary<string, IOTABreakpoint>.Create;
-  LPort := StrToIntDef(GetEnvironmentVariable('RAD_PLUGIN_PORT'), 5645);
-  LToken := GetEnvironmentVariable('RAD_PLUGIN_TOKEN');
-  try
-    FRpc.Start('127.0.0.1', LPort, LToken);
-  except
-    // не валим IDE
-  end;
-  DS := DebuggerServices;
-  if Assigned(DS) then
-    FNotifierIndex := DS.AddNotifier(Self)
-  else
-    FNotifierIndex := -1;
-  // UI добавляем сильно отложенно, чтобы не мешать проверке зависимостей/загрузке пакетов
-  TThread.ForceQueue(nil,
-    procedure
-    begin
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          try
-            CreateStatusAction;
-            UpdateClientStatus(0);
-          except
-          end;
-        end);
-    end);
+  // Отложим инициализацию, чтобы не трогать UI/сервисы IDE во время регистрации
+  TThread.ForceQueue(nil, InitLater);
 end;
 
 destructor TMcpDebuggerWizard.Destroy;
@@ -111,13 +82,46 @@ begin
   end;
   FBreakpoints.Free;
   try
-    FRpc.Stop;
+    if Assigned(FRpc) then
+    begin
+      FRpc.Stop;
+      FRpc.Free;
+    end;
   except
+    // ignore
   end;
-  FRpc.Free;
   if Assigned(FImageList) then FImageList.Free;
   if Assigned(FAction) then FAction.Free;
   inherited;
+end;
+
+procedure TMcpDebuggerWizard.InitLater;
+var
+  LPort: Integer;
+  LToken: string;
+  DS: IOTADebuggerServices;
+begin
+  try
+    LPort := StrToIntDef(GetEnvironmentVariable('RAD_PLUGIN_PORT'), 5645);
+    LToken := GetEnvironmentVariable('RAD_PLUGIN_TOKEN');
+    if Assigned(FRpc) then
+      FRpc.Start('127.0.0.1', LPort, LToken);
+
+    DS := DebuggerServices;
+    if Assigned(DS) then
+      FNotifierIndex := DS.AddNotifier(Self)
+    else
+      FNotifierIndex := -1;
+
+    CreateStatusAction;
+    UpdateClientStatus(0);
+  except
+    on E: Exception do
+    begin
+      // тихо логируем в вывод IDE
+      OutputDebugString(PChar('MCP Debugger InitLater failed: ' + E.Message));
+    end;
+  end;
 end;
 
 procedure TMcpDebuggerWizard.CreateStatusAction;
@@ -127,49 +131,53 @@ var
   I: Integer;
   Btn: TActionClientItem;
 begin
-  if Assigned(FAction) then Exit;
-  if (Screen = nil) or (Screen.FormCount = 0) then Exit;
-
-  FImageList := TImageList.Create(nil);
-  FImageList.Width := 12;
-  FImageList.Height := 12;
-
-  GreenBmp := TBitmap.Create;
-  RedBmp := TBitmap.Create;
   try
-    GreenBmp.SetSize(12, 12);
-    RedBmp.SetSize(12, 12);
-    GreenBmp.Canvas.Brush.Color := clLime;
-    GreenBmp.Canvas.FillRect(Rect(0,0,12,12));
-    RedBmp.Canvas.Brush.Color := clRed;
-    RedBmp.Canvas.FillRect(Rect(0,0,12,12));
-    FGreenIdx := FImageList.Add(GreenBmp, nil);
-    FRedIdx := FImageList.Add(RedBmp, nil);
-  finally
-    GreenBmp.Free;
-    RedBmp.Free;
-  end;
+    FImageList := TImageList.Create(nil);
+    FImageList.Width := 12;
+    FImageList.Height := 12;
 
-  FAction := TAction.Create(Screen.Forms[0]);
-  FAction.Caption := 'MCP Debug';
-  FAction.Hint := 'Статус подключения MCP клиента';
-  FAction.Enabled := True;
-  FAction.ImageIndex := FRedIdx;
-
-  ToolBar := nil;
-  for I := 0 to Screen.Forms[0].ComponentCount - 1 do
-    if Screen.Forms[0].Components[I] is TActionToolBar then
-    begin
-      ToolBar := TActionToolBar(Screen.Forms[0].Components[I]);
-      Break;
+    GreenBmp := TBitmap.Create;
+    RedBmp := TBitmap.Create;
+    try
+      GreenBmp.SetSize(12, 12);
+      RedBmp.SetSize(12, 12);
+      GreenBmp.Canvas.Brush.Color := clLime;
+      GreenBmp.Canvas.FillRect(Rect(0,0,12,12));
+      RedBmp.Canvas.Brush.Color := clRed;
+      RedBmp.Canvas.FillRect(Rect(0,0,12,12));
+      FGreenIdx := FImageList.Add(GreenBmp, nil);
+      FRedIdx := FImageList.Add(RedBmp, nil);
+    finally
+      GreenBmp.Free;
+      RedBmp.Free;
     end;
-  if Assigned(ToolBar) and Assigned(ToolBar.ActionManager) then
-  begin
-    // не трогаем глобальные Images, используем индекс в нашей локальной ImageList только для отображения
-    ToolBar.ActionManager.Images := FImageList;
-    FAction.ActionList := ToolBar.ActionManager;
-    Btn := ToolBar.AddAction(FAction);
-    Btn.AutoSize := True;
+
+    FAction := TAction.Create(nil);
+    FAction.Caption := 'MCP Debug';
+    FAction.Hint := 'Статус подключения MCP клиента';
+    FAction.Enabled := True;
+    FAction.ImageIndex := FRedIdx;
+
+    ToolBar := nil;
+    if (Screen <> nil) and (Screen.FormCount > 0) then
+    begin
+      for I := 0 to Screen.Forms[0].ComponentCount - 1 do
+        if Screen.Forms[0].Components[I] is TActionToolBar then
+        begin
+          ToolBar := TActionToolBar(Screen.Forms[0].Components[I]);
+          Break;
+        end;
+    end;
+    if Assigned(ToolBar) and Assigned(ToolBar.ActionManager) then
+    begin
+      ToolBar.ActionManager.Images := FImageList;
+      FAction.ActionList := ToolBar.ActionManager;
+      Btn := ToolBar.AddAction(FAction);
+      Btn.AutoSize := True;
+    end;
+  except
+    on E: Exception do
+      OutputDebugString(PChar('MCP Debugger CreateStatusAction failed: ' + E.Message));
   end;
 end;
 
@@ -192,6 +200,7 @@ end;
 
 procedure TMcpDebuggerWizard.Execute;
 begin
+  // no UI
 end;
 
 function TMcpDebuggerWizard.GetIDString: string;
@@ -227,7 +236,8 @@ begin
   try
     P.AddPair('category', 'stdout');
     P.AddPair('text', AText);
-    FRpc.Notify('debug/output', P.ToJSON);
+    if Assigned(FRpc) then
+      FRpc.Notify('debug/output', P.ToJSON);
   finally
     P.Free;
   end;
@@ -241,7 +251,8 @@ begin
   try
     P.AddPair('reason', AReason);
     P.AddPair('threadId', TJSONNumber.Create(ThreadId));
-    FRpc.Notify('debug/stopped', P.ToJSON);
+    if Assigned(FRpc) then
+      FRpc.Notify('debug/stopped', P.ToJSON);
   finally
     P.Free;
   end;
@@ -257,9 +268,13 @@ begin
   BS := BreakpointServices;
   if not Assigned(BS) then Exit;
   try
-    BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '', True, 0, 0);
-  except
     BP := BS.AddSourceBreakpoint(AFile, ALine, 0, '');
+  except
+    on E: Exception do
+    begin
+      OutputDebugString(PChar('AddSourceBreakpoint failed: ' + E.Message));
+      Exit;
+    end;
   end;
   if Assigned(BP) then
   begin
@@ -284,9 +299,14 @@ begin
     Key := Format('%s:%d', [AFile, ALine]);
   if FBreakpoints.TryGetValue(Key, BP) then
   begin
-    BS.DeleteBreakpoint(BP);
-    FBreakpoints.Remove(Key);
-    Result := True;
+    try
+      BS.DeleteBreakpoint(BP);
+      FBreakpoints.Remove(Key);
+      Result := True;
+    except
+      on E: Exception do
+        OutputDebugString(PChar('DeleteBreakpoint failed: ' + E.Message));
+    end;
   end;
 end;
 
@@ -378,7 +398,8 @@ end;
 
 procedure TMcpDebuggerWizard.ProcessDestroyed(const Process: IOTAProcess);
 begin
-  FRpc.Notify('debug/exited', '{"exitCode":0}');
+  if Assigned(FRpc) then
+    FRpc.Notify('debug/exited', '{"exitCode":0}');
 end;
 
 procedure TMcpDebuggerWizard.BreakpointAdded(const Breakpoint: IOTABreakpoint);
