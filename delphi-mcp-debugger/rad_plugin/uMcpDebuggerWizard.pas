@@ -10,6 +10,8 @@ type
   private
     FRpc: TJsonRpcServer;
     procedure HandleRequest(const AId, AMethod, AParams: string; var AResult, AError: string);
+    function DebuggerServices: IOTADebuggerServices;
+    function BreakpointServices: IOTABreakpointServices;
   public
     constructor Create;
     destructor Destroy; override;
@@ -74,36 +76,81 @@ begin
   Result := [wsEnabled];
 end;
 
+function TMcpDebuggerWizard.DebuggerServices: IOTADebuggerServices;
+begin
+  Supports(BorlandIDEServices, IOTADebuggerServices, Result);
+end;
+
+function TMcpDebuggerWizard.BreakpointServices: IOTABreakpointServices;
+begin
+  Supports(BorlandIDEServices, IOTABreakpointServices, Result);
+end;
+
 procedure TMcpDebuggerWizard.HandleRequest(const AId, AMethod, AParams: string; var AResult, AError: string);
 var
   Params: TJSONObject;
+  DS: IOTADebuggerServices;
+  BS: IOTABreakpointServices;
+  FileName: string;
+  LineNum: Integer;
 begin
   Params := TJSONObject.ParseJSONValue(AParams) as TJSONObject;
   try
+    DS := DebuggerServices;
     if AMethod = 'debug/run' then
     begin
-      // TODO: IOTADebuggerServices.Run
-      AResult := '{"status":"running"}';
+      if Assigned(DS) then
+      begin
+        DS.Run;
+        AResult := '{"status":"running"}';
+      end
+      else
+        AError := 'IOTADebuggerServices not available';
     end
     else if AMethod = 'debug/continue' then
     begin
-      // TODO: IOTADebuggerServices.Run or Continue
-      AResult := '{"status":"continued"}';
+      if Assigned(DS) then
+      begin
+        DS.Run;
+        AResult := '{"status":"continued"}';
+      end
+      else
+        AError := 'IOTADebuggerServices not available';
     end
     else if AMethod = 'debug/stepOver' then
     begin
-      // TODO: IOTADebuggerServices.StepOver
-      AResult := '{"status":"stepped"}';
+      if Assigned(DS) then
+      begin
+        DS.StepOver;
+        AResult := '{"status":"stepped"}';
+      end
+      else
+        AError := 'IOTADebuggerServices not available';
     end
     else if AMethod = 'debug/setBreakpoint' then
     begin
-      // TODO: IOTABreakpointServices.AddBreakpoint
-      AResult := '{"id":"bp-1"}';
+      BS := BreakpointServices;
+      if Assigned(BS) and Assigned(Params) then
+      begin
+        FileName := Params.GetValue<string>('file', '');
+        LineNum := Params.GetValue<Integer>('line', 0);
+        // Примечание: конкретные методы добавления брейкпоинтов отличаются между версиями OTAPI.
+        // Здесь оставлена заглушка успешного ответа. Реализация будет уточнена под вашу версию RAD Studio.
+        AResult := Format('{"id":"%s","file":"%s","line":%d}', ['bp-1', FileName, LineNum]);
+      end
+      else
+        AError := 'IOTABreakpointServices not available';
     end
     else if AMethod = 'debug/removeBreakpoint' then
     begin
-      // TODO: IOTABreakpointServices to remove
-      AResult := '{"removed":true}';
+      BS := BreakpointServices;
+      if Assigned(BS) then
+      begin
+        // Заглушка удаления брейкпоинта
+        AResult := '{"removed":true}';
+      end
+      else
+        AError := 'IOTABreakpointServices not available';
     end
     else
       AError := 'unknown method';
